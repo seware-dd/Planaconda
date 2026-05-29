@@ -1,0 +1,1290 @@
+NonsensicalsKaycee Quarterly
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gantt Chart Plugin</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232636;
+      --border: #2e3348;
+      --text: #e8eaf0;
+      --text-muted: #7a7f9a;
+      --accent: #5b8af0;
+      --accent2: #7c5af0;
+      --green: #3ecf8e;
+      --amber: #f5a623;
+      --red: #f05b5b;
+      --pink: #f05bbb;
+      --cyan: #5be8f0;
+      --purple: #b35bf0;
+      --row-h: 40px;
+      --header-h: 56px;
+      --label-w: 260px;
+      --today-color: #f5a623;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Toolbar ─────────────────────────────────────── */
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    #toolbar h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .02em;
+      margin-right: 4px;
+    }
+
+    .tb-sep { width: 1px; height: 20px; background: var(--border); }
+
+    .tb-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    select, input[type="text"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    select:focus, input:focus { border-color: var(--accent); }
+
+    .btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .btn:hover { background: var(--border); border-color: var(--accent); }
+    .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .zoom-group { display: flex; gap: 0; }
+    .zoom-group .btn { border-radius: 0; border-right-width: 0; }
+    .zoom-group .btn:first-child { border-radius: 6px 0 0 6px; }
+    .zoom-group .btn:last-child { border-radius: 0 6px 6px 0; border-right-width: 1px; }
+
+    .color-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* ── Main layout ─────────────────────────────────── */
+    #gantt-wrap {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Label panel ─────────────────────────────────── */
+    #label-panel {
+      width: var(--label-w);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    #label-header {
+      height: var(--header-h);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 8px;
+    }
+
+    #label-header span {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+    }
+
+    #search-box {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+    }
+
+    #label-rows {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      height: var(--row-h);
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(46,51,72,.5);
+      cursor: default;
+      gap: 6px;
+      transition: background .1s;
+    }
+    .label-row:hover { background: rgba(91,138,240,.06); }
+    .label-row.group-row {
+      background: rgba(124,90,240,.08);
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .label-row.group-row:hover { background: rgba(124,90,240,.14); }
+
+    .row-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .row-name {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .row-status-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .badge-done { background: rgba(62,207,142,.15); color: var(--green); }
+    .badge-progress { background: rgba(91,138,240,.15); color: var(--accent); }
+    .badge-planned { background: rgba(122,127,154,.12); color: var(--text-muted); }
+    .badge-blocked { background: rgba(240,91,91,.15); color: var(--red); }
+
+    .indent-1 { padding-left: 26px; }
+    .indent-2 { padding-left: 40px; }
+
+    /* ── Chart area ──────────────────────────────────── */
+    #chart-area {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+    }
+
+    #chart-inner {
+      position: relative;
+    }
+
+    /* ── Time header ─────────────────────────────────── */
+    #time-header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: var(--header-h);
+      overflow: hidden;
+    }
+
+    .th-top {
+      height: 22px;
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .th-month {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .th-bottom {
+      height: 34px;
+      display: flex;
+      align-items: center;
+    }
+
+    .th-day, .th-week {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-muted);
+      border-right: 1px solid rgba(46,51,72,.5);
+      height: 100%;
+      flex-shrink: 0;
+    }
+
+    .th-day.today, .th-week.today {
+      color: var(--today-color);
+      font-weight: 700;
+    }
+
+    .th-week {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* ── Grid rows ───────────────────────────────────── */
+    .chart-row {
+      height: var(--row-h);
+      border-bottom: 1px solid rgba(46,51,72,.5);
+      position: relative;
+    }
+
+    .chart-row.group-row {
+      background: rgba(124,90,240,.04);
+    }
+
+    .weekend-col {
+      position: absolute;
+      top: 0; bottom: 0;
+      background: rgba(255,255,255,.018);
+    }
+
+    .today-line {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: var(--today-color);
+      z-index: 3;
+      box-shadow: 0 0 8px rgba(245,166,35,.4);
+    }
+
+    /* ── Bars ────────────────────────────────────────── */
+    .bar-wrap {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 22px;
+      z-index: 2;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: filter .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .bar-wrap:hover {
+      filter: brightness(1.15);
+      transform: translateY(-52%);
+      z-index: 4;
+    }
+
+    .bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      opacity: .35;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .bar-label {
+      position: relative;
+      z-index: 1;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+      pointer-events: none;
+      max-width: 100%;
+    }
+
+    .group-bar {
+      height: 28px !important;
+      top: 50% !important;
+      border-radius: 2px !important;
+      opacity: .85;
+    }
+
+    .milestone-diamond {
+      position: absolute;
+      top: 50%;
+      z-index: 4;
+      width: 14px; height: 14px;
+      transform: translateY(-50%) rotate(45deg);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: transform .15s;
+    }
+    .milestone-diamond:hover {
+      transform: translateY(-50%) rotate(45deg) scale(1.3);
+    }
+
+    /* ── Dependency arrows ───────────────────────────── */
+    #dep-svg {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .dep-arrow {
+      fill: none;
+      stroke: rgba(91,138,240,.45);
+      stroke-width: 1.5;
+      stroke-dasharray: 4 3;
+      marker-end: url(#arrowhead);
+    }
+
+    /* ── Tooltip ─────────────────────────────────────── */
+    #tooltip {
+      position: fixed;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 100;
+      min-width: 200px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+      opacity: 0;
+      transition: opacity .1s;
+    }
+    #tooltip.show { opacity: 1; }
+
+    .tt-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+    .tt-row { display: flex; justify-content: space-between; gap: 20px; color: var(--text-muted); margin-bottom: 3px; }
+    .tt-val { color: var(--text); font-weight: 500; }
+    .tt-progress-bar {
+      margin-top: 8px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .tt-progress-fill { height: 100%; border-radius: 2px; }
+
+    /* ── Config panel ────────────────────────────────── */
+    #config-panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #config-panel.open { display: flex; }
+
+    .config-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .config-box h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .config-group {
+      margin-bottom: 16px;
+    }
+
+    .config-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .config-select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .config-btn-row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* ── Legend ──────────────────────────────────────── */
+    #legend {
+      display: flex;
+      gap: 16px;
+      padding: 6px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .legend-swatch {
+      width: 12px; height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Empty state */
+    #empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    #empty-state .icon { font-size: 40px; }
+    #empty-state p { font-size: 13px; text-align: center; max-width: 280px; line-height: 1.6; }
+    #empty-state strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <h1>📊 Gantt Chart</h1>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Zoom</span>
+  <div class="zoom-group">
+    <button class="btn" onclick="setZoom('day')">Day</button>
+    <button class="btn active" onclick="setZoom('week')">Week</button>
+    <button class="btn" onclick="setZoom('month')">Month</button>
+  </div>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Group by</span>
+  <select id="group-by-sel" onchange="render()">
+    <option value="">None</option>
+    <option value="__team__">Team / Owner</option>
+    <option value="__status__">Status</option>
+  </select>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Filter</span>
+  <select id="filter-sel" onchange="render()">
+    <option value="">All</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Planned">Planned</option>
+    <option value="Done">Done</option>
+    <option value="Blocked">Blocked</option>
+  </select>
+  <div class="tb-sep"></div>
+  <button class="btn" onclick="jumpToToday()">⊙ Today</button>
+  <button class="btn" onclick="openConfig()">⚙ Configure</button>
+</div>
+
+<!-- Main -->
+<div id="gantt-wrap">
+  <!-- Labels -->
+  <div id="label-panel">
+    <div id="label-header">
+      <input id="search-box" type="text" placeholder="🔍 Search tasks…" oninput="render()" />
+    </div>
+    <div id="label-rows"></div>
+  </div>
+
+  <!-- Chart -->
+  <div id="chart-area" onscroll="syncScroll(this)">
+    <div id="chart-inner">
+      <div id="time-header"></div>
+      <div id="chart-rows"></div>
+      <svg id="dep-svg">
+        <defs>
+          <marker id="arrowhead" markerWidth="6" markerHeight="6"
+            refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(91,138,240,.6)" />
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" style="display:none; position:absolute; inset:0; background:var(--bg); z-index:20;">
+    <div class="icon">📋</div>
+    <p>Connect your Sigma table columns to get started.<br><strong>Configure</strong> the plugin to map your data fields.</p>
+    <button class="btn-primary" onclick="openConfig()">Configure Columns</button>
+  </div>
+</div>
+
+<!-- Legend -->
+<div id="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--accent)"></div>In Progress</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div>Done</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--text-muted)"></div>Planned</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--red)"></div>Blocked</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber); transform:rotate(45deg); width:10px;height:10px;"></div>Milestone</div>
+  <div class="legend-item" style="margin-left:auto; color:var(--text-muted); font-size:10px; font-family:'DM Mono',monospace;" id="stats-label"></div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip">
+  <div class="tt-title" id="tt-name"></div>
+  <div class="tt-row"><span>Start</span><span class="tt-val" id="tt-start"></span></div>
+  <div class="tt-row"><span>End</span><span class="tt-val" id="tt-end"></span></div>
+  <div class="tt-row"><span>Status</span><span class="tt-val" id="tt-status"></span></div>
+  <div class="tt-row"><span>Owner</span><span class="tt-val" id="tt-owner"></span></div>
+  <div class="tt-row"><span>Progress</span><span class="tt-val" id="tt-progress"></span></div>
+  <div class="tt-progress-bar"><div class="tt-progress-fill" id="tt-pfill"></div></div>
+</div>
+
+<!-- Config panel -->
+<div id="config-panel">
+  <div class="config-box">
+    <h2>⚙ Configure Gantt Columns</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Map your Sigma table columns to Gantt fields. Columns auto-detected from your data source.</p>
+
+    <div class="config-group">
+      <div class="config-label">Task Name *</div>
+      <select class="config-select" id="cfg-name"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Start Date *</div>
+      <select class="config-select" id="cfg-start"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">End Date *</div>
+      <select class="config-select" id="cfg-end"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Status</div>
+      <select class="config-select" id="cfg-status"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Owner / Team</div>
+      <select class="config-select" id="cfg-owner"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Progress % (0–100)</div>
+      <select class="config-select" id="cfg-progress"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Group / Category</div>
+      <select class="config-select" id="cfg-group"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Milestone (true/false or 1/0)</div>
+      <select class="config-select" id="cfg-milestone"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Dependency (comma-separated task names)</div>
+      <select class="config-select" id="cfg-dep"></select>
+    </div>
+    <div class="config-group">
+      <div class="config-label">Color Override</div>
+      <select class="config-select" id="cfg-color"></select>
+    </div>
+
+    <div class="config-btn-row">
+      <button class="btn" onclick="closeConfig()">Cancel</button>
+      <button class="btn-primary" onclick="applyConfig()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Sigma Plugin Bootstrap
+   The plugin API uses window.sigma if available, otherwise
+   we run in standalone demo mode with rich sample data.
+───────────────────────────────────────────────────────────── */
+
+const PLUGIN_ID = 'gantt-chart-plugin';
+
+// Column mapping (filled by config or auto-detected)
+let colMap = {
+  name: null, start: null, end: null, status: null,
+  owner: null, progress: null, group: null,
+  milestone: null, dep: null, color: null
+};
+
+let rawData = [];       // rows from Sigma
+let availCols = [];     // column names from Sigma
+let sigmaClient = null;
+let zoom = 'week';      // day | week | month
+const COL_W = { day: 28, week: 100, month: 160 };
+
+const PALETTE = {
+  'In Progress': '#5b8af0',
+  'Done':        '#3ecf8e',
+  'Planned':     '#7a7f9a',
+  'Blocked':     '#f05b5b',
+  'Review':      '#f5a623',
+  'Design':      '#b35bf0',
+  'Testing':     '#5be8f0',
+  'default':     '#5b8af0'
+};
+
+const GROUP_COLORS = [
+  '#5b8af0','#7c5af0','#3ecf8e','#f5a623','#f05b5b',
+  '#b35bf0','#5be8f0','#f05bbb','#e8a83e','#4fc1ff'
+];
+
+/* ── Sigma API integration ─────────────────────────────── */
+function initSigma() {
+  if (typeof sigma !== 'undefined') {
+    sigmaClient = sigma.initialize({ id: PLUGIN_ID });
+
+    sigmaClient.config.configureEditorPanel([
+      { name: 'Name Column',       label: 'Task Name',          type: 'column', source: 'workbook', allowedTypes: ['text'] },
+      { name: 'Start Column',      label: 'Start Date',         type: 'column', source: 'workbook', allowedTypes: ['datetime','date'] },
+      { name: 'End Column',        label: 'End Date',           type: 'column', source: 'workbook', allowedTypes: ['datetime','date'] },
+      { name: 'Status Column',     label: 'Status',             type: 'column', source: 'workbook', allowedTypes: ['text'] },
+      { name: 'Owner Column',      label: 'Owner / Team',       type: 'column', source: 'workbook', allowedTypes: ['text'] },
+      { name: 'Progress Column',   label: 'Progress (0–100)',   type: 'column', source: 'workbook', allowedTypes: ['number','integer'] },
+      { name: 'Group Column',      label: 'Group / Category',   type: 'column', source: 'workbook', allowedTypes: ['text'] },
+      { name: 'Milestone Column',  label: 'Milestone Flag',     type: 'column', source: 'workbook', allowedTypes: ['text','boolean','number'] },
+      { name: 'Dep Column',        label: 'Dependencies (CSV)', type: 'column', source: 'workbook', allowedTypes: ['text'] },
+      { name: 'Color Column',      label: 'Color Override',     type: 'column', source: 'workbook', allowedTypes: ['text'] },
+      { name: 'Zoom',              label: 'Default Zoom',       type: 'select', values: ['day','week','month'], defaultValue: 'week' },
+    ]);
+
+    sigmaClient.data.subscribe(onSigmaData);
+    sigmaClient.config.subscribe(onSigmaConfig);
+
+  } else {
+    // Demo mode with sample roadmap data
+    loadDemoData();
+  }
+}
+
+function onSigmaConfig(config) {
+  colMap.name      = config['Name Column']      || null;
+  colMap.start     = config['Start Column']     || null;
+  colMap.end       = config['End Column']       || null;
+  colMap.status    = config['Status Column']    || null;
+  colMap.owner     = config['Owner Column']     || null;
+  colMap.progress  = config['Progress Column']  || null;
+  colMap.group     = config['Group Column']     || null;
+  colMap.milestone = config['Milestone Column'] || null;
+  colMap.dep       = config['Dep Column']       || null;
+  colMap.color     = config['Color Column']     || null;
+  if (config['Zoom']) setZoom(config['Zoom']);
+  render();
+}
+
+function onSigmaData(data) {
+  rawData = data || [];
+  // Detect available columns from first row
+  if (rawData.length > 0) {
+    availCols = Object.keys(rawData[0]);
+    // Auto-detect column mapping if not configured
+    autoDetectColumns();
+  }
+  document.getElementById('empty-state').style.display =
+    rawData.length === 0 ? 'flex' : 'none';
+  render();
+}
+
+function autoDetectColumns() {
+  const lower = c => c.toLowerCase();
+  availCols.forEach(c => {
+    const l = lower(c);
+    if (!colMap.name     && /name|title|task|item/.test(l))    colMap.name = c;
+    if (!colMap.start    && /start|begin|from/.test(l))        colMap.start = c;
+    if (!colMap.end      && /end|finish|due|to/.test(l))       colMap.end = c;
+    if (!colMap.status   && /status|state|phase/.test(l))      colMap.status = c;
+    if (!colMap.owner    && /owner|team|assign|who/.test(l))   colMap.owner = c;
+    if (!colMap.progress && /progress|pct|percent|%/.test(l))  colMap.progress = c;
+    if (!colMap.group    && /group|category|epic|sprint/.test(l)) colMap.group = c;
+    if (!colMap.milestone && /milestone|ms|flag/.test(l))      colMap.milestone = c;
+    if (!colMap.dep      && /dep|prereq|block/.test(l))        colMap.dep = c;
+    if (!colMap.color    && /color|colour/.test(l))            colMap.color = c;
+  });
+}
+
+/* ── Demo Data ─────────────────────────────────────────── */
+function loadDemoData() {
+  const today = dayjs();
+  const d = (offset) => today.add(offset, 'day').format('YYYY-MM-DD');
+
+  rawData = [
+    // Q1 Planning
+    { name:'Q1 Planning',      start:d(-90), end:d(-60), status:'Done',        owner:'Strategy',    progress:100, group:'Planning',     milestone:false, dep:'' },
+    { name:'Requirements',     start:d(-85), end:d(-70), status:'Done',        owner:'Product',     progress:100, group:'Planning',     milestone:false, dep:'Q1 Planning' },
+    { name:'Kickoff Meeting',  start:d(-80), end:d(-80), status:'Done',        owner:'All Hands',   progress:100, group:'Planning',     milestone:true,  dep:'' },
+
+    // Design
+    { name:'Design Sprint',    start:d(-70), end:d(-45), status:'Done',        owner:'Design',      progress:100, group:'Design',       milestone:false, dep:'Requirements' },
+    { name:'UX Research',      start:d(-68), end:d(-55), status:'Done',        owner:'UX Team',     progress:100, group:'Design',       milestone:false, dep:'' },
+    { name:'Prototyping',      start:d(-52), end:d(-40), status:'Done',        owner:'Design',      progress:100, group:'Design',       milestone:false, dep:'Design Sprint' },
+    { name:'Design Review',    start:d(-40), end:d(-40), status:'Done',        owner:'Design',      progress:100, group:'Design',       milestone:true,  dep:'Prototyping' },
+
+    // Backend
+    { name:'API Architecture', start:d(-60), end:d(-40), status:'Done',        owner:'Backend',     progress:100, group:'Engineering',  milestone:false, dep:'Requirements' },
+    { name:'Auth Service',     start:d(-45), end:d(-20), status:'Done',        owner:'Backend',     progress:100, group:'Engineering',  milestone:false, dep:'API Architecture' },
+    { name:'Core API',         start:d(-40), end:d(-5),  status:'Done',        owner:'Backend',     progress:100, group:'Engineering',  milestone:false, dep:'API Architecture' },
+    { name:'Database Layer',   start:d(-38), end:d(-10), status:'Done',        owner:'Backend',     progress:100, group:'Engineering',  milestone:false, dep:'' },
+
+    // Frontend
+    { name:'Component Library',start:d(-35), end:d(-10), status:'Done',       owner:'Frontend',    progress:100, group:'Engineering',  milestone:false, dep:'Design Review' },
+    { name:'Dashboard UI',     start:d(-20), end:d(10),  status:'In Progress', owner:'Frontend',    progress:72,  group:'Engineering',  milestone:false, dep:'Component Library' },
+    { name:'Mobile App',       start:d(-15), end:d(20),  status:'In Progress', owner:'Mobile',      progress:45,  group:'Engineering',  milestone:false, dep:'Component Library' },
+    { name:'Integrations',     start:d(-5),  end:d(25),  status:'In Progress', owner:'Backend',     progress:30,  group:'Engineering',  milestone:false, dep:'Core API' },
+
+    // QA
+    { name:'Test Planning',    start:d(-25), end:d(-15), status:'Done',        owner:'QA',          progress:100, group:'QA',           milestone:false, dep:'' },
+    { name:'Backend QA',       start:d(-10), end:d(5),   status:'In Progress', owner:'QA',          progress:60,  group:'QA',           milestone:false, dep:'Core API' },
+    { name:'Frontend QA',      start:d(8),   end:d(22),  status:'Planned',     owner:'QA',          progress:0,   group:'QA',           milestone:false, dep:'Dashboard UI' },
+    { name:'Regression Suite', start:d(18),  end:d(28),  status:'Planned',     owner:'QA',          progress:0,   group:'QA',           milestone:false, dep:'Frontend QA' },
+
+    // Launch
+    { name:'Beta Launch',      start:d(25),  end:d(25),  status:'Planned',     owner:'Product',     progress:0,   group:'Launch',       milestone:true,  dep:'Regression Suite' },
+    { name:'Performance Test', start:d(22),  end:d(32),  status:'Planned',     owner:'DevOps',      progress:0,   group:'Launch',       milestone:false, dep:'Beta Launch' },
+    { name:'Security Audit',   start:d(20),  end:d(35),  status:'Planned',     owner:'Security',    progress:0,   group:'Launch',       milestone:false, dep:'Core API' },
+    { name:'Docs & Training',  start:d(25),  end:d(42),  status:'Planned',     owner:'Content',     progress:0,   group:'Launch',       milestone:false, dep:'' },
+    { name:'GA Release',       start:d(45),  end:d(45),  status:'Planned',     owner:'All Hands',   progress:0,   group:'Launch',       milestone:true,  dep:'Performance Test' },
+
+    // Post-launch
+    { name:'v1.1 Planning',    start:d(42),  end:d(55),  status:'Planned',     owner:'Product',     progress:0,   group:'Post-Launch',  milestone:false, dep:'GA Release' },
+    { name:'Bug Bash',         start:d(46),  end:d(52),  status:'Planned',     owner:'Engineering', progress:0,   group:'Post-Launch',  milestone:false, dep:'GA Release' },
+    { name:'Analytics Setup',  start:d(50),  end:d(62),  status:'Planned',     owner:'Data',        progress:0,   group:'Post-Launch',  milestone:false, dep:'GA Release' },
+  ];
+
+  colMap = {
+    name:'name', start:'start', end:'end', status:'status',
+    owner:'owner', progress:'progress', group:'group',
+    milestone:'milestone', dep:'dep', color:null
+  };
+
+  availCols = Object.keys(rawData[0]);
+  document.getElementById('empty-state').style.display = 'none';
+  render();
+}
+
+/* ── Get field value from row ──────────────────────────── */
+function fv(row, key) {
+  const col = colMap[key];
+  if (!col) return null;
+  return row[col] ?? null;
+}
+
+/* ── Build display rows with optional grouping ─────────── */
+function buildRows(data) {
+  const groupByVal = document.getElementById('group-by-sel').value;
+  const filterVal  = document.getElementById('filter-sel').value;
+  const search     = document.getElementById('search-box').value.toLowerCase();
+
+  // Filter
+  let filtered = data.filter(row => {
+    const n = (fv(row,'name') || '').toLowerCase();
+    if (search && !n.includes(search)) return false;
+    if (filterVal) {
+      const s = (fv(row,'status') || '').trim();
+      if (s !== filterVal) return false;
+    }
+    return true;
+  });
+
+  const rows = [];
+  if (groupByVal === '__team__' || groupByVal === '__status__') {
+    const groupKey = groupByVal === '__team__' ? 'owner' : 'status';
+    const groups = {};
+    filtered.forEach(row => {
+      const g = fv(row, groupKey) || 'Unassigned';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(row);
+    });
+    Object.entries(groups).forEach(([gname, grows]) => {
+      rows.push({ type: 'group', name: gname, rows: grows });
+      grows.forEach(row => rows.push({ type: 'task', row }));
+    });
+  } else if (colMap.group) {
+    const groups = {};
+    filtered.forEach(row => {
+      const g = fv(row,'group') || 'Ungrouped';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(row);
+    });
+    Object.entries(groups).forEach(([gname, grows]) => {
+      rows.push({ type: 'group', name: gname, rows: grows });
+      grows.forEach(row => rows.push({ type: 'task', row }));
+    });
+  } else {
+    filtered.forEach(row => rows.push({ type: 'task', row }));
+  }
+  return rows;
+}
+
+/* ── Date range for the chart ──────────────────────────── */
+function getDateRange(data) {
+  let min = dayjs().subtract(2,'week'), max = dayjs().add(4,'week');
+  data.forEach(row => {
+    const s = dayjs(fv(row,'start')), e = dayjs(fv(row,'end'));
+    if (s.isValid() && s.isBefore(min)) min = s;
+    if (e.isValid() && e.isAfter(max)) max = e;
+  });
+  return {
+    start: min.subtract(7,'day').startOf(zoom === 'day' ? 'day' : 'week'),
+    end:   max.add(14,'day').endOf(zoom === 'day' ? 'day' : 'week')
+  };
+}
+
+/* ── Build time columns ────────────────────────────────── */
+function buildTimeCols(range) {
+  const cols = [];
+  const cw = COL_W[zoom];
+  let cur = range.start.clone();
+  const today = dayjs();
+
+  while (cur.isBefore(range.end) || cur.isSame(range.end)) {
+    const isToday = cur.isSame(today, zoom === 'day' ? 'day' : 'week');
+    const isWeekend = cur.day() === 0 || cur.day() === 6;
+    let label = '';
+    if (zoom === 'day') {
+      label = cur.format('D');
+    } else if (zoom === 'week') {
+      label = 'W' + cur.format('WW');
+    } else {
+      label = cur.format("MMM 'YY");
+    }
+    cols.push({ date: cur.clone(), label, isToday, isWeekend, width: cw });
+    cur = cur.add(1, zoom === 'day' ? 'day' : zoom === 'week' ? 'week' : 'month');
+  }
+  return cols;
+}
+
+/* ── Pixel position for a date ─────────────────────────── */
+function dateToPx(date, rangeStart) {
+  const d = dayjs(date);
+  const cw = COL_W[zoom];
+  const unit = zoom === 'day' ? 'day' : zoom === 'week' ? 'week' : 'month';
+  const diff = d.diff(rangeStart, unit, true);
+  return diff * cw;
+}
+
+/* ── Status → color ────────────────────────────────────── */
+function statusColor(status, colorOverride) {
+  if (colorOverride) return colorOverride;
+  return PALETTE[status] || PALETTE['default'];
+}
+
+/* ── Main render ───────────────────────────────────────── */
+let _range = null;
+let _timeCols = [];
+let _displayRows = [];
+
+function render() {
+  if (rawData.length === 0) return;
+
+  _displayRows = buildRows(rawData);
+  _range = getDateRange(rawData);
+  _timeCols = buildTimeCols(_range);
+
+  const totalW = _timeCols.reduce((s,c) => s + c.width, 0);
+  const totalH = _displayRows.length * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--row-h'));
+
+  document.getElementById('chart-inner').style.width  = totalW + 'px';
+  document.getElementById('chart-inner').style.minHeight = (totalH + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h'))) + 'px';
+
+  renderHeader();
+  renderRows();
+  renderDeps();
+  updateStats();
+}
+
+function renderHeader() {
+  const header = document.getElementById('time-header');
+  const cw = COL_W[zoom];
+
+  // Group by month
+  const months = {};
+  _timeCols.forEach((col, i) => {
+    const mk = col.date.format('YYYY-MM');
+    if (!months[mk]) months[mk] = { label: col.date.format('MMMM YYYY'), cols: 0, x: i * cw };
+    months[mk].cols++;
+  });
+
+  let topHtml = '<div class="th-top">';
+  Object.values(months).forEach(m => {
+    topHtml += `<div class="th-month" style="width:${m.cols * cw}px;">${m.label}</div>`;
+  });
+  topHtml += '</div>';
+
+  let botHtml = '<div class="th-bottom">';
+  _timeCols.forEach(col => {
+    const cls = col.isToday ? ' today' : '';
+    const unit = zoom === 'week' ? 'th-week' : 'th-day';
+    botHtml += `<div class="${unit}${cls}" style="width:${col.width}px;">${col.label}</div>`;
+  });
+  botHtml += '</div>';
+
+  header.innerHTML = topHtml + botHtml;
+}
+
+function renderRows() {
+  const labelEl  = document.getElementById('label-rows');
+  const chartEl  = document.getElementById('chart-rows');
+  const cw = COL_W[zoom];
+  const totalW = _timeCols.reduce((s,c)=>s+c.width,0);
+  const ROW_H = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--row-h'));
+  const today = dayjs();
+
+  let labelHtml = '';
+  let chartHtml = '';
+  let gIdx = -1;
+
+  _displayRows.forEach((item, rowIdx) => {
+    if (item.type === 'group') {
+      gIdx++;
+      const gc = GROUP_COLORS[gIdx % GROUP_COLORS.length];
+      // Compute group span
+      const starts = item.rows.map(r=>dayjs(fv(r,'start'))).filter(d=>d.isValid());
+      const ends   = item.rows.map(r=>dayjs(fv(r,'end'))).filter(d=>d.isValid());
+      const gStart = starts.length ? starts.reduce((a,b)=>a.isBefore(b)?a:b) : null;
+      const gEnd   = ends.length   ? ends.reduce((a,b)=>a.isAfter(b)?a:b)   : null;
+
+      // Label row
+      labelHtml += `<div class="label-row group-row" data-row="${rowIdx}" style="border-left:3px solid ${gc};">
+        <span class="row-icon">▾</span>
+        <span class="row-name">${escHtml(item.name)}</span>
+        <span style="font-size:10px;color:var(--text-muted);">${item.rows.length}</span>
+      </div>`;
+
+      // Chart row
+      let barHtml = '';
+      if (gStart && gEnd) {
+        const x = dateToPx(gStart, _range.start);
+        const w = Math.max(dateToPx(gEnd, _range.start) - x + cw, 4);
+        barHtml = `<div class="bar-wrap group-bar" style="left:${x}px;width:${w}px;background:${gc};opacity:.25;border-radius:2px;"
+          data-row="${rowIdx}" onmouseenter="showTip(event,'${escHtml(item.name)}',null,null,null,null,null)"></div>`;
+      }
+      // Weekend shading
+      let wkHtml = weekendCols(totalW, ROW_H);
+      chartHtml += `<div class="chart-row group-row" style="width:${totalW}px;">${wkHtml}${barHtml}</div>`;
+      return;
+    }
+
+    // Task row
+    const row = item.row;
+    const name     = fv(row,'name')      || '—';
+    const start    = dayjs(fv(row,'start'));
+    const end      = dayjs(fv(row,'end'));
+    const status   = fv(row,'status')    || '';
+    const owner    = fv(row,'owner')     || '';
+    const progress = parseFloat(fv(row,'progress')) || 0;
+    const isMilestone = !!fv(row,'milestone') && String(fv(row,'milestone')).toLowerCase() !== 'false' && fv(row,'milestone') != 0;
+    const colorOvr = fv(row,'color') || null;
+    const color    = statusColor(status, colorOvr);
+
+    const badge = statusBadge(status);
+
+    // Label
+    labelHtml += `<div class="label-row indent-1" data-row="${rowIdx}">
+      <span class="row-icon">${isMilestone ? '◆' : '▸'}</span>
+      <span class="row-name" title="${escHtml(name)}">${escHtml(name)}</span>
+      ${badge}
+    </div>`;
+
+    // Chart
+    let barHtml = '';
+    if (isMilestone && start.isValid()) {
+      const x = dateToPx(start, _range.start) + cw/2 - 7;
+      barHtml = `<div class="milestone-diamond" style="left:${x}px;background:${color};"
+        onmouseenter="showTip(event,'${escHtml(name)}','${start.format('MMM D')}','${start.format('MMM D')}','${escHtml(status)}','${escHtml(owner)}',${progress},event)"
+        onmouseleave="hideTip()" onclick="onBarClick('${escHtml(name)}')"></div>`;
+    } else if (start.isValid() && end.isValid()) {
+      const x = dateToPx(start, _range.start);
+      const x2 = dateToPx(end.add(1,'day'), _range.start);
+      const w = Math.max(x2 - x, 4);
+      barHtml = `<div class="bar-wrap" style="left:${x}px;width:${w}px;background:${color}25;border:1.5px solid ${color};"
+        onmouseenter="showTip(event,'${escHtml(name)}','${start.format('MMM D, YYYY')}','${end.format('MMM D, YYYY')}','${escHtml(status)}','${escHtml(owner)}',${progress})"
+        onmouseleave="hideTip()" onclick="onBarClick('${escHtml(name)}')">
+        <div class="bar-fill" style="width:${progress}%;background:${color};"></div>
+        <span class="bar-label" style="color:${color};">${escHtml(name)}</span>
+      </div>`;
+    }
+
+    let wkHtml = weekendCols(totalW, ROW_H);
+    chartHtml += `<div class="chart-row" data-name="${escHtml(name)}" style="width:${totalW}px;">${wkHtml}${barHtml}</div>`;
+  });
+
+  // Today line
+  const todayX = dateToPx(today, _range.start);
+  chartHtml += `<div class="today-line" style="left:${todayX}px;top:0;height:${_displayRows.length * ROW_H}px;"></div>`;
+
+  labelEl.innerHTML  = labelHtml;
+  chartEl.innerHTML  = chartHtml;
+
+  // Update dep SVG size
+  const svg = document.getElementById('dep-svg');
+  const totalH = _displayRows.length * ROW_H + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h'));
+  svg.setAttribute('width',  totalW);
+  svg.setAttribute('height', totalH);
+}
+
+function weekendCols(totalW, rowH) {
+  if (zoom !== 'day') return '';
+  let html = '';
+  let x = 0;
+  _timeCols.forEach(col => {
+    if (col.isWeekend) {
+      html += `<div class="weekend-col" style="left:${x}px;width:${col.width}px;"></div>`;
+    }
+    x += col.width;
+  });
+  return html;
+}
+
+/* ── Dependency arrows ─────────────────────────────────── */
+function renderDeps() {
+  const svg = document.getElementById('dep-svg');
+  const cw = COL_W[zoom];
+  const ROW_H = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--row-h'));
+  const HEADER_H = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h'));
+
+  // Build name → row index map
+  const nameToRow = {};
+  _displayRows.forEach((item, i) => {
+    if (item.type === 'task') {
+      const n = fv(item.row, 'name') || '';
+      nameToRow[n] = i;
+    }
+  });
+
+  let paths = `<defs>
+    <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="rgba(91,138,240,.6)" />
+    </marker></defs>`;
+
+  _displayRows.forEach((item, toIdx) => {
+    if (item.type !== 'task') return;
+    const depStr = fv(item.row, 'dep');
+    if (!depStr) return;
+    const deps = String(depStr).split(',').map(d=>d.trim()).filter(Boolean);
+
+    deps.forEach(depName => {
+      const fromIdx = nameToRow[depName];
+      if (fromIdx === undefined) return;
+
+      const fromRow = _displayRows[fromIdx];
+      if (!fromRow || fromRow.type !== 'task') return;
+      const fromEnd = dayjs(fv(fromRow.row, 'end'));
+      const toStart = dayjs(fv(item.row, 'start'));
+      if (!fromEnd.isValid() || !toStart.isValid()) return;
+
+      const x1 = dateToPx(fromEnd.add(1,'day'), _range.start);
+      const y1 = HEADER_H + fromIdx * ROW_H + ROW_H / 2;
+      const x2 = dateToPx(toStart, _range.start);
+      const y2 = HEADER_H + toIdx * ROW_H + ROW_H / 2;
+      const mx = (x1 + x2) / 2;
+
+      paths += `<path class="dep-arrow" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" />`;
+    });
+  });
+
+  svg.innerHTML = paths;
+}
+
+/* ── Tooltip ───────────────────────────────────────────── */
+function showTip(e, name, start, end, status, owner, progress) {
+  const tt = document.getElementById('tooltip');
+  document.getElementById('tt-name').textContent     = name || '';
+  document.getElementById('tt-start').textContent    = start || '—';
+  document.getElementById('tt-end').textContent      = end || '—';
+  document.getElementById('tt-status').textContent   = status || '—';
+  document.getElementById('tt-owner').textContent    = owner || '—';
+  document.getElementById('tt-progress').textContent = (progress != null ? progress + '%' : '—');
+  const color = statusColor(status, null);
+  document.getElementById('tt-pfill').style.background = color;
+  document.getElementById('tt-pfill').style.width = (progress || 0) + '%';
+  tt.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e) {
+  const tt = document.getElementById('tooltip');
+  const x = Math.min(e.clientX + 14, window.innerWidth - 220);
+  const y = Math.min(e.clientY + 14, window.innerHeight - 160);
+  tt.style.left = x + 'px';
+  tt.style.top  = y + 'px';
+}
+function hideTip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+document.addEventListener('mousemove', e => {
+  if (document.getElementById('tooltip').classList.contains('show')) moveTip(e);
+});
+
+/* ── Bar click → Sigma filter ──────────────────────────── */
+function onBarClick(name) {
+  if (sigmaClient && sigmaClient.elements && sigmaClient.elements.triggerFilter) {
+    sigmaClient.elements.triggerFilter({ column: colMap.name, value: name });
+  }
+}
+
+/* ── Sync scroll (sticky label panel) ─────────────────── */
+function syncScroll(el) {}
+
+/* ── Zoom ──────────────────────────────────────────────── */
+function setZoom(z) {
+  zoom = z;
+  document.querySelectorAll('.zoom-group .btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['day','week','month'][i] === z);
+  });
+  render();
+}
+
+/* ── Jump to today ─────────────────────────────────────── */
+function jumpToToday() {
+  const ca = document.getElementById('chart-area');
+  const todayX = dateToPx(dayjs(), _range.start);
+  ca.scrollLeft = Math.max(0, todayX - ca.clientWidth / 2);
+}
+
+/* ── Status badge ──────────────────────────────────────── */
+function statusBadge(status) {
+  const map = { 'Done':'badge-done','In Progress':'badge-progress','Planned':'badge-planned','Blocked':'badge-blocked' };
+  const cls = map[status] || 'badge-planned';
+  if (!status) return '';
+  return `<span class="row-status-badge ${cls}">${escHtml(status)}</span>`;
+}
+
+/* ── HTML escape ───────────────────────────────────────── */
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Config panel ──────────────────────────────────────── */
+function openConfig() {
+  // Populate selects with available columns
+  const selects = ['cfg-name','cfg-start','cfg-end','cfg-status','cfg-owner','cfg-progress','cfg-group','cfg-milestone','cfg-dep','cfg-color'];
+  const keys    = ['name','start','end','status','owner','progress','group','milestone','dep','color'];
+  selects.forEach((id, i) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">— None —</option>' + availCols.map(c =>
+      `<option value="${c}" ${colMap[keys[i]]===c?'selected':''}>${c}</option>`
+    ).join('');
+  });
+  document.getElementById('config-panel').classList.add('open');
+}
+function closeConfig() {
+  document.getElementById('config-panel').classList.remove('open');
+}
+function applyConfig() {
+  const keys = ['name','start','end','status','owner','progress','group','milestone','dep','color'];
+  const ids  = ['cfg-name','cfg-start','cfg-end','cfg-status','cfg-owner','cfg-progress','cfg-group','cfg-milestone','cfg-dep','cfg-color'];
+  ids.forEach((id, i) => {
+    const v = document.getElementById(id).value;
+    colMap[keys[i]] = v || null;
+  });
+  closeConfig();
+  render();
+}
+
+/* ── Stats ─────────────────────────────────────────────── */
+function updateStats() {
+  const tasks = rawData.length;
+  const done  = rawData.filter(r => (fv(r,'status')||'') === 'Done').length;
+  document.getElementById('stats-label').textContent =
+    `${done}/${tasks} tasks complete`;
+}
+
+/* ── Init ──────────────────────────────────────────────── */
+window.addEventListener('load', initSigma);
+</script>
+</body>
+</html>
+
