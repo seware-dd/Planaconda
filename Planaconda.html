@@ -18,236 +18,179 @@
       flex-direction: column;
     }
 
-    /* ── Layout ── */
     #gantt {
       display: flex;
       flex: 1;
       overflow: hidden;
     }
 
-    /* ── Left label column ── */
+    /* ── Labels ── */
     #labels {
-      width: 220px;
+      width: 230px;
       flex-shrink: 0;
       border-right: 1px solid #e0e0e0;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     .label-header {
-      height: 48px;
+      height: 52px;
       border-bottom: 1px solid #e0e0e0;
       display: flex;
       align-items: center;
-      padding: 0 12px;
+      padding: 0 14px;
       font-weight: 600;
       font-size: 11px;
       color: #888;
       text-transform: uppercase;
-      letter-spacing: .05em;
+      letter-spacing: .06em;
       background: #fafafa;
+      flex-shrink: 0;
     }
 
-    #label-rows {
-      overflow-y: auto;
-      flex: 1;
-    }
+    #label-rows { overflow-y: auto; flex: 1; }
 
     .label-row {
-      height: 36px;
+      height: 38px;
       display: flex;
       align-items: center;
-      padding: 0 12px;
+      padding: 0 14px;
       border-bottom: 1px solid #f0f0f0;
-      gap: 6px;
+      gap: 7px;
     }
 
-    .label-row.group {
+    .label-row.is-group {
       background: #f5f5f5;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 11px;
-      color: #555;
+      color: #444;
       text-transform: uppercase;
-      letter-spacing: .04em;
+      letter-spacing: .05em;
     }
 
-    .label-name {
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    .lname {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       flex: 1;
+      font-size: 12px;
+      color: #333;
     }
 
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
+    .sbadge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
       flex-shrink: 0;
     }
 
-    /* ── Right chart area ── */
-    #chart {
-      flex: 1;
-      overflow: auto;
-      position: relative;
-    }
-
-    #chart-inner {
-      position: relative;
-    }
+    /* ── Chart ── */
+    #chart { flex: 1; overflow: auto; position: relative; }
+    #chart-inner { position: relative; min-height: 100%; }
 
     /* ── Time header ── */
     #time-header {
-      height: 48px;
+      height: 52px;
       position: sticky;
       top: 0;
       background: #fafafa;
       border-bottom: 1px solid #e0e0e0;
       z-index: 5;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .th-months {
-      height: 20px;
-      display: flex;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .th-month {
-      display: flex;
-      align-items: center;
-      padding: 0 8px;
-      font-size: 10px;
-      font-weight: 600;
-      color: #999;
-      border-right: 1px solid #e0e0e0;
-      text-transform: uppercase;
-      letter-spacing: .05em;
       overflow: hidden;
-      white-space: nowrap;
     }
 
-    .th-weeks {
-      height: 28px;
-      display: flex;
-      align-items: center;
+    .th-months { height: 22px; display: flex; border-bottom: 1px solid #e0e0e0; }
+    .th-month {
+      display: flex; align-items: center; padding: 0 8px;
+      font-size: 10px; font-weight: 700; color: #aaa;
+      border-right: 1px solid #e0e0e0;
+      text-transform: uppercase; letter-spacing: .05em;
+      overflow: hidden; white-space: nowrap; flex-shrink: 0;
     }
 
-    .th-week {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #aaa;
-      border-right: 1px solid #f0f0f0;
-      flex-shrink: 0;
+    .th-units { height: 30px; display: flex; align-items: center; }
+    .th-unit {
+      height: 100%; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #bbb;
+      border-right: 1px solid #f0f0f0; flex-shrink: 0;
     }
+    .th-unit.is-today { color: #e07b00; font-weight: 700; }
 
-    .th-week.today { color: #f5a623; font-weight: 700; }
+    /* ── Rows ── */
+    .chart-row { height: 38px; border-bottom: 1px solid #f0f0f0; position: relative; }
+    .chart-row.is-group { background: #f9f9f9; }
 
-    /* ── Grid rows ── */
-    .chart-row {
-      height: 36px;
-      border-bottom: 1px solid #f0f0f0;
-      position: relative;
-    }
-
-    .chart-row.group { background: #f9f9f9; }
-
-    /* ── Today line ── */
     .today-line {
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 2px;
-      background: #f5a623;
-      opacity: .7;
-      z-index: 3;
+      position: absolute; top: 0; bottom: 0;
+      width: 2px; background: rgba(224,123,0,.5); z-index: 2;
     }
 
     /* ── Bars ── */
     .bar {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      height: 20px;
-      border-radius: 3px;
-      z-index: 2;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      min-width: 4px;
+      position: absolute; top: 50%; transform: translateY(-50%);
+      height: 22px; border-radius: 4px; z-index: 3;
+      cursor: pointer; display: flex; align-items: center; overflow: hidden;
+      min-width: 4px; transition: filter .12s;
     }
+    .bar:hover { filter: brightness(.88); z-index: 5; }
 
-    .bar:hover { filter: brightness(.9); }
-
-    .bar-progress {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      opacity: .4;
+    .bar-prog {
+      position: absolute; left: 0; top: 0; bottom: 0; opacity: .35;
     }
 
     .bar-text {
-      position: relative;
-      padding: 0 6px;
-      font-size: 10px;
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0,0,0,.3);
+      position: relative; padding: 0 7px;
+      font-size: 10px; font-weight: 600; color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0,0,0,.4);
     }
 
     .milestone {
-      position: absolute;
-      top: 50%;
-      width: 12px; height: 12px;
+      position: absolute; top: 50%;
+      width: 13px; height: 13px;
       transform: translateY(-50%) rotate(45deg);
-      border-radius: 2px;
-      z-index: 3;
-      cursor: pointer;
+      border-radius: 2px; z-index: 4; cursor: pointer;
+      transition: transform .12s;
     }
+    .milestone:hover { transform: translateY(-50%) rotate(45deg) scale(1.3); }
 
     /* ── Tooltip ── */
     #tip {
       position: fixed;
-      background: #1a1a2e;
-      color: #fff;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 11px;
-      pointer-events: none;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity .1s;
-      line-height: 1.7;
-      max-width: 220px;
+      background: #1e2030; color: #e8eaf0;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 11px; pointer-events: none;
+      z-index: 100; opacity: 0; transition: opacity .1s;
+      line-height: 1.8; max-width: 240px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
     }
     #tip.show { opacity: 1; }
-    #tip strong { font-size: 12px; display: block; margin-bottom: 2px; }
+    #tip strong { font-size: 12px; display: block; margin-bottom: 3px; color: #fff; }
+    .tip-row { display: flex; justify-content: space-between; gap: 16px; }
+    .tip-val { color: #a8b0cc; }
 
-    /* ── Empty / Error ── */
+    /* ── Empty state ── */
     #empty {
-      display: none;
-      flex: 1;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 8px;
-      color: #aaa;
-      font-size: 13px;
-      text-align: center;
-      padding: 20px;
+      display: none; flex: 1; align-items: center;
+      justify-content: center; flex-direction: column;
+      gap: 10px; color: #bbb; font-size: 13px; text-align: center; padding: 24px;
     }
     #empty.show { display: flex; }
+    #empty .ico { font-size: 36px; margin-bottom: 4px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
   </style>
 </head>
 <body>
 
-<div id="gantt">
+<div id="gantt" style="display:none">
   <div id="labels">
     <div class="label-header">Task</div>
     <div id="label-rows"></div>
@@ -256,7 +199,7 @@
     <div id="chart-inner">
       <div id="time-header">
         <div class="th-months"></div>
-        <div class="th-weeks"></div>
+        <div class="th-units"></div>
       </div>
       <div id="chart-rows"></div>
     </div>
@@ -264,271 +207,242 @@
 </div>
 
 <div id="empty" class="show">
-  <div style="font-size:32px">📋</div>
-  <div>Configure the plugin columns<br>in the editor panel to show your data.</div>
+  <div class="ico">📋</div>
+  <div>Select a <strong>Data Source</strong> and map your columns<br>in the editor panel on the right.</div>
 </div>
 
-<div id="tip"></div>
+<div id="tip">
+  <strong id="tip-name"></strong>
+  <div class="tip-row"><span>Start</span><span class="tip-val" id="tip-start"></span></div>
+  <div class="tip-row"><span>End</span><span class="tip-val" id="tip-end"></span></div>
+  <div class="tip-row" id="tip-status-row"><span>Status</span><span class="tip-val" id="tip-status"></span></div>
+  <div class="tip-row" id="tip-owner-row"><span>Owner</span><span class="tip-val" id="tip-owner"></span></div>
+  <div class="tip-row" id="tip-prog-row"><span>Progress</span><span class="tip-val" id="tip-prog"></span></div>
+</div>
 
 <script>
-const COL_W = 90; // px per week
+/* ─────────────────────────────────────────────────
+   Sigma Plugin — Gantt Chart
+   Uses the correct client API:
+     client.config.configureEditorPanel
+     client.config.subscribe
+     client.elements.subscribeToElementColumns
+     client.elements.subscribeToElementData
+   Data arrives as Dictionary<columnId, CellValue[]>
+───────────────────────────────────────────────────*/
 
-// ── Register with Sigma ────────────────────────────────
-sigma.initialize({
-  id: 'gantt-chart'
-});
+const client = sigma.initialize({ id: 'gantt-chart' });
 
-sigma.config.configureEditorPanel([
-  {
-    name: 'source',
-    type: 'element',
-    label: 'Data Source'
-  },
-  {
-    name: 'col_name',
-    type: 'column',
-    label: 'Task Name',
-    source: 'source',
-    allowedTypes: ['text']
-  },
-  {
-    name: 'col_start',
-    type: 'column',
-    label: 'Start Date',
-    source: 'source',
-    allowedTypes: ['datetime', 'date', 'text']
-  },
-  {
-    name: 'col_end',
-    type: 'column',
-    label: 'End Date',
-    source: 'source',
-    allowedTypes: ['datetime', 'date', 'text']
-  },
-  {
-    name: 'col_status',
-    type: 'column',
-    label: 'Status (optional)',
-    source: 'source',
-    allowedTypes: ['text'],
-    optional: true
-  },
-  {
-    name: 'col_owner',
-    type: 'column',
-    label: 'Owner / Team (optional)',
-    source: 'source',
-    allowedTypes: ['text'],
-    optional: true
-  },
-  {
-    name: 'col_group',
-    type: 'column',
-    label: 'Group / Category (optional)',
-    source: 'source',
-    allowedTypes: ['text'],
-    optional: true
-  },
-  {
-    name: 'col_progress',
-    type: 'column',
-    label: 'Progress % (optional)',
-    source: 'source',
-    allowedTypes: ['number', 'integer'],
-    optional: true
-  },
-  {
-    name: 'col_milestone',
-    type: 'column',
-    label: 'Milestone flag (optional)',
-    source: 'source',
-    allowedTypes: ['boolean', 'text', 'number'],
-    optional: true
-  }
+// ── Editor panel config ──────────────────────────
+client.config.configureEditorPanel([
+  { name: 'source',        type: 'element' },
+  { name: 'col_name',      type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_start',     type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_end',       type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_status',    type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_owner',     type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_group',     type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_progress',  type: 'column', source: 'source', allowMultiple: false },
+  { name: 'col_milestone', type: 'column', source: 'source', allowMultiple: false },
 ]);
 
-// ── State ──────────────────────────────────────────────
-let cfg = {};
-let rows = [];
+// ── State ────────────────────────────────────────
+let cfg       = {};
+let colMeta   = {};   // columnId -> { name, ... }
+let rawData   = {};   // columnId -> CellValue[]
+let colUnsub  = null;
+let dataUnsub = null;
 
-// ── Listen for config + data changes ──────────────────
-sigma.config.subscribe((newCfg) => {
-  cfg = newCfg;
-  render();
+// ── Config subscription ──────────────────────────
+client.config.subscribe((newCfg) => {
+  cfg = newCfg || {};
+
+  const sourceId = cfg['source'];
+  if (!sourceId) { showEmpty(); return; }
+
+  // Unsubscribe previous
+  if (colUnsub)  { colUnsub();  colUnsub  = null; }
+  if (dataUnsub) { dataUnsub(); dataUnsub = null; }
+
+  // Subscribe to columns (to get column name -> id mapping)
+  colUnsub = client.elements.subscribeToElementColumns(sourceId, (columns) => {
+    colMeta = {};
+    if (columns) {
+      Object.entries(columns).forEach(([id, meta]) => {
+        colMeta[id] = meta;
+      });
+    }
+  });
+
+  // Subscribe to data
+  dataUnsub = client.elements.subscribeToElementData(sourceId, (data) => {
+    rawData = data || {};
+    render();
+  });
 });
 
-sigma.data.subscribe((data) => {
-  rows = data || [];
-  render();
-});
-
-// ── Helpers ────────────────────────────────────────────
-function fv(row, key) {
-  const col = cfg[key];
-  return col ? row[col] : null;
+// ── Resolve column id from config key ───────────
+// cfg stores the columnId selected by the user for each slot
+function colId(key) {
+  return cfg[key] || null;
 }
 
-const STATUS_COLORS = {
-  'done':        '#3ecf8e',
-  'complete':    '#3ecf8e',
-  'completed':   '#3ecf8e',
-  'in progress': '#4a90e2',
-  'active':      '#4a90e2',
-  'planned':     '#aaa',
-  'not started': '#aaa',
-  'blocked':     '#e25c5c',
-  'at risk':     '#f5a623',
-};
-
-function colorFor(status) {
-  if (!status) return '#4a90e2';
-  return STATUS_COLORS[status.toLowerCase()] || '#4a90e2';
+function colValues(key) {
+  const id = colId(key);
+  if (!id) return null;
+  return rawData[id] || null;
 }
 
-function parseDate(v) {
-  if (!v) return null;
-  // Handle Sigma date objects or ISO strings
-  const d = new Date(v);
-  return isNaN(d) ? null : d;
+// ── Build rows array ─────────────────────────────
+function buildTasks() {
+  const names      = colValues('col_name');
+  const starts     = colValues('col_start');
+  const ends       = colValues('col_end');
+  const statuses   = colValues('col_status');
+  const owners     = colValues('col_owner');
+  const groups     = colValues('col_group');
+  const progresses = colValues('col_progress');
+  const milestones = colValues('col_milestone');
+
+  if (!names || !starts || !ends) return [];
+
+  const tasks = [];
+  for (let i = 0; i < names.length; i++) {
+    const start = parseDate(starts[i]);
+    const end   = parseDate(ends[i]);
+    if (!names[i] || (!start && !end)) continue;
+
+    const msVal = milestones ? milestones[i] : null;
+    tasks.push({
+      name:      String(names[i] || ''),
+      start,
+      end,
+      status:    statuses   ? String(statuses[i]   || '') : '',
+      owner:     owners     ? String(owners[i]     || '') : '',
+      group:     groups     ? String(groups[i]     || '') : '',
+      progress:  progresses ? (parseFloat(progresses[i]) || 0) : 0,
+      milestone: msVal === true || msVal === 1 || msVal === 'true' || msVal === '1',
+    });
+  }
+  return tasks;
 }
 
-function addDays(d, n) {
-  const r = new Date(d); r.setDate(r.getDate() + n); return r;
-}
-
-function startOfWeek(d) {
-  const r = new Date(d);
-  r.setHours(0,0,0,0);
-  r.setDate(r.getDate() - r.getDay());
-  return r;
-}
-
-function weeksBetween(a, b) {
-  return (b - a) / (7 * 24 * 3600 * 1000);
-}
-
-function fmt(d) {
-  if (!d) return '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-// ── Render ─────────────────────────────────────────────
+// ── Render ───────────────────────────────────────
 function render() {
-  const hasData = rows.length > 0 && cfg.col_name && cfg.col_start && cfg.col_end;
+  const tasks = buildTasks();
+  if (!tasks.length) { showEmpty(); return; }
 
-  document.getElementById('gantt').style.display  = hasData ? 'flex' : 'none';
-  document.getElementById('empty').classList.toggle('show', !hasData);
-  if (!hasData) return;
+  showGantt();
 
-  // Parse rows
-  const tasks = rows.map(r => ({
-    name:      fv(r, 'col_name')      || '',
-    start:     parseDate(fv(r, 'col_start')),
-    end:       parseDate(fv(r, 'col_end')),
-    status:    fv(r, 'col_status')    || '',
-    owner:     fv(r, 'col_owner')     || '',
-    group:     fv(r, 'col_group')     || '',
-    progress:  parseFloat(fv(r, 'col_progress')) || 0,
-    milestone: (() => { const v = fv(r, 'col_milestone'); return v === true || v === 1 || v === 'true' || v === '1'; })()
-  })).filter(t => t.name && (t.start || t.end));
-
-  if (tasks.length === 0) return;
+  const COL_W = 90;
+  const ROW_H = 38;
+  const HDR_H = 52;
+  const today = new Date();
 
   // Date range
   const allDates = tasks.flatMap(t => [t.start, t.end]).filter(Boolean);
-  const minDate  = startOfWeek(addDays(new Date(Math.min(...allDates)), -7));
-  const maxDate  = new Date(Math.max(...allDates));
-  maxDate.setDate(maxDate.getDate() + 21);
-  const maxWeek  = startOfWeek(maxDate);
+  if (!allDates.length) { showEmpty(); return; }
 
-  // Week columns
+  let minD = new Date(Math.min(...allDates));
+  let maxD = new Date(Math.max(...allDates));
+  minD = startOfWeek(addDays(minD, -7));
+  maxD = addDays(maxD, 21);
+
+  // Build week columns
   const weeks = [];
-  let cur = new Date(minDate);
-  while (cur <= maxWeek) {
+  let cur = new Date(minD);
+  while (cur <= maxD) {
     weeks.push(new Date(cur));
     cur.setDate(cur.getDate() + 7);
   }
   const totalW = weeks.length * COL_W;
 
   // Group tasks
-  const useGroup = !!cfg.col_group;
-  const groups = {};
+  const useGroup = !!colId('col_group');
+  const grouped  = {};
   tasks.forEach(t => {
     const g = useGroup ? (t.group || 'Other') : '__all__';
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(t);
+    if (!grouped[g]) grouped[g] = [];
+    grouped[g].push(t);
   });
 
-  // Build display rows
+  // Display rows
   const displayRows = [];
-  Object.entries(groups).forEach(([gname, gtasks]) => {
-    if (useGroup) displayRows.push({ type: 'group', name: gname });
-    gtasks.forEach(t => displayRows.push({ type: 'task', task: t }));
+  Object.entries(grouped).forEach(([gname, gtasks]) => {
+    if (useGroup) displayRows.push({ isGroup: true, name: gname });
+    gtasks.forEach(t => displayRows.push({ isGroup: false, task: t }));
   });
 
-  // ── Header ──
-  const today = new Date();
+  // ── Time header ──
   const monthMap = {};
   weeks.forEach((w, i) => {
     const mk = `${w.getFullYear()}-${w.getMonth()}`;
-    if (!monthMap[mk]) monthMap[mk] = { label: w.toLocaleDateString('en-US',{month:'short',year:'numeric'}), count: 0 };
+    if (!monthMap[mk]) monthMap[mk] = { label: w.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }), count: 0 };
     monthMap[mk].count++;
   });
 
-  const monthsEl = document.querySelector('.th-months');
-  monthsEl.innerHTML = Object.values(monthMap).map(m =>
-    `<div class="th-month" style="width:${m.count * COL_W}px">${m.label}</div>`
-  ).join('');
+  document.querySelector('.th-months').innerHTML =
+    Object.values(monthMap).map(m =>
+      `<div class="th-month" style="width:${m.count * COL_W}px">${m.label}</div>`
+    ).join('');
 
-  const weeksEl = document.querySelector('.th-weeks');
-  weeksEl.style.width = totalW + 'px';
-  weeksEl.innerHTML = weeks.map(w => {
-    const isToday = Math.abs(w - startOfWeek(today)) < 3600000;
-    return `<div class="th-week${isToday?' today':''}" style="width:${COL_W}px">
-      W${getWeekNum(w)}
-    </div>`;
+  const unitsEl = document.querySelector('.th-units');
+  unitsEl.style.width = totalW + 'px';
+  unitsEl.innerHTML = weeks.map(w => {
+    const isT = Math.abs(w - startOfWeek(today)) < 86400000;
+    return `<div class="th-unit${isT ? ' is-today' : ''}" style="width:${COL_W}px">W${weekNum(w)}</div>`;
   }).join('');
 
   // ── Chart inner size ──
-  document.getElementById('chart-inner').style.width = totalW + 'px';
+  const ci = document.getElementById('chart-inner');
+  ci.style.width     = totalW + 'px';
+  ci.style.minHeight = (displayRows.length * ROW_H + HDR_H) + 'px';
+
+  // Today x
+  const todayX = wksBetween(minD, startOfWeek(today)) * COL_W;
 
   // ── Label rows ──
   document.getElementById('label-rows').innerHTML = displayRows.map(item => {
-    if (item.type === 'group') {
-      return `<div class="label-row group"><span class="label-name">${esc(item.name)}</span></div>`;
+    if (item.isGroup) {
+      return `<div class="label-row is-group"><span class="lname">${esc(item.name)}</span></div>`;
     }
     const t = item.task;
-    const color = colorFor(t.status);
+    const c = statusColor(t.status);
+    const badge = t.status
+      ? `<span class="sbadge" style="background:${c}22;color:${c}">${esc(t.status)}</span>`
+      : '';
     return `<div class="label-row">
-      <div class="dot" style="background:${color}"></div>
-      <span class="label-name" title="${esc(t.name)}">${esc(t.name)}</span>
+      <div class="dot" style="background:${c}"></div>
+      <span class="lname" title="${esc(t.name)}">${esc(t.name)}</span>
+      ${badge}
     </div>`;
   }).join('');
 
   // ── Chart rows ──
-  const todayX = weeksBetween(minDate, startOfWeek(today)) * COL_W;
-
-  document.getElementById('chart-rows').innerHTML = displayRows.map((item, i) => {
-    if (item.type === 'group') {
-      return `<div class="chart-row group" style="width:${totalW}px"></div>`;
+  document.getElementById('chart-rows').innerHTML = displayRows.map(item => {
+    if (item.isGroup) {
+      return `<div class="chart-row is-group" style="width:${totalW}px">
+        <div class="today-line" style="left:${todayX}px"></div>
+      </div>`;
     }
     const t = item.task;
-    const color = colorFor(t.status);
+    const c = statusColor(t.status);
     let barHtml = '';
 
     if (t.milestone && t.start) {
-      const x = weeksBetween(minDate, t.start) * COL_W - 6;
-      barHtml = `<div class="milestone" style="left:${x}px;background:${color}"
-        onmouseenter="tip(event,'${esc(t.name)}','${fmt(t.start)}',null,'${esc(t.status)}','${esc(t.owner)}')"
+      const x = wksBetween(minD, t.start) * COL_W - 6;
+      barHtml = `<div class="milestone" style="left:${x}px;background:${c}"
+        onmouseenter="showTip(event,'${esc(t.name)}','${fmt(t.start)}','${fmt(t.start)}','${esc(t.status)}','${esc(t.owner)}',${t.progress})"
         onmouseleave="hideTip()"></div>`;
     } else if (t.start && t.end) {
-      const x = weeksBetween(minDate, t.start) * COL_W;
-      const w = Math.max(weeksBetween(t.start, addDays(t.end, 1)) * COL_W, 4);
-      barHtml = `<div class="bar" style="left:${x}px;width:${w}px;background:${color}"
-        onmouseenter="tip(event,'${esc(t.name)}','${fmt(t.start)}','${fmt(t.end)}','${esc(t.status)}','${esc(t.owner)}',${t.progress})"
+      const x  = wksBetween(minD, t.start) * COL_W;
+      const x2 = wksBetween(minD, addDays(t.end, 1)) * COL_W;
+      const w  = Math.max(x2 - x, 4);
+      barHtml = `<div class="bar" style="left:${x}px;width:${w}px;background:${c}33;border:1.5px solid ${c};"
+        onmouseenter="showTip(event,'${esc(t.name)}','${fmt(t.start)}','${fmt(t.end)}','${esc(t.status)}','${esc(t.owner)}',${t.progress})"
         onmouseleave="hideTip()">
-        <div class="bar-progress" style="width:${t.progress}%;background:#fff"></div>
-        <span class="bar-text">${esc(t.name)}</span>
+        <div class="bar-prog" style="width:${t.progress}%;background:${c}"></div>
+        <span class="bar-text" style="color:${c}">${esc(t.name)}</span>
       </div>`;
     }
 
@@ -539,39 +453,95 @@ function render() {
   }).join('');
 }
 
-function getWeekNum(d) {
+// ── Helpers ──────────────────────────────────────
+const STATUS_COLORS = {
+  'done':        '#3ecf8e', 'complete':    '#3ecf8e', 'completed':   '#3ecf8e',
+  'in progress': '#4a90e2', 'active':      '#4a90e2', 'in-progress': '#4a90e2',
+  'planned':     '#9aa0b8', 'not started': '#9aa0b8', 'not_started': '#9aa0b8',
+  'blocked':     '#e25c5c', 'at risk':     '#f5a623', 'on hold':     '#f5a623',
+  'review':      '#b35bf0', 'design':      '#5be8f0',
+};
+
+function statusColor(s) {
+  if (!s) return '#4a90e2';
+  return STATUS_COLORS[s.toLowerCase()] || '#4a90e2';
+}
+
+function parseDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate() + n); return r;
+}
+
+function startOfWeek(d) {
+  const r = new Date(d);
+  r.setHours(0, 0, 0, 0);
+  r.setDate(r.getDate() - r.getDay());
+  return r;
+}
+
+function wksBetween(a, b) {
+  return (b - a) / (7 * 24 * 3600 * 1000);
+}
+
+function weekNum(d) {
   const jan1 = new Date(d.getFullYear(), 0, 1);
   return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
 }
 
-function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function fmt(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ── Tooltip ────────────────────────────────────────────
-function tip(e, name, start, end, status, owner, progress) {
-  const el = document.getElementById('tip');
-  el.innerHTML = `<strong>${name}</strong>
-    ${start ? `Start: ${start}<br>` : ''}
-    ${end   ? `End: ${end}<br>`   : ''}
-    ${status ? `Status: ${status}<br>` : ''}
-    ${owner  ? `Owner: ${owner}<br>`  : ''}
-    ${progress != null ? `Progress: ${progress}%` : ''}`;
-  el.classList.add('show');
-  move(e);
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Tooltip ──────────────────────────────────────
+function showTip(e, name, start, end, status, owner, progress) {
+  document.getElementById('tip-name').textContent   = name;
+  document.getElementById('tip-start').textContent  = start;
+  document.getElementById('tip-end').textContent    = end;
+  document.getElementById('tip-status').textContent = status || '—';
+  document.getElementById('tip-owner').textContent  = owner  || '—';
+  document.getElementById('tip-prog').textContent   = progress != null ? progress + '%' : '—';
+  document.getElementById('tip-status-row').style.display = status  ? '' : 'none';
+  document.getElementById('tip-owner-row').style.display  = owner   ? '' : 'none';
+  document.getElementById('tip-prog-row').style.display   = progress != null ? '' : 'none';
+  moveTip(e);
+  document.getElementById('tip').classList.add('show');
 }
 
 function hideTip() { document.getElementById('tip').classList.remove('show'); }
 
-function move(e) {
+function moveTip(e) {
   const el = document.getElementById('tip');
-  el.style.left = Math.min(e.clientX + 12, window.innerWidth - 230) + 'px';
-  el.style.top  = Math.min(e.clientY + 12, window.innerHeight - 120) + 'px';
+  el.style.left = Math.min(e.clientX + 14, window.innerWidth  - 250) + 'px';
+  el.style.top  = Math.min(e.clientY + 14, window.innerHeight - 140) + 'px';
 }
 
 document.addEventListener('mousemove', e => {
-  if (document.getElementById('tip').classList.contains('show')) move(e);
+  if (document.getElementById('tip').classList.contains('show')) moveTip(e);
 });
+
+// ── Show/hide ─────────────────────────────────────
+function showEmpty() {
+  document.getElementById('gantt').style.display = 'none';
+  document.getElementById('empty').classList.add('show');
+}
+
+function showGantt() {
+  document.getElementById('gantt').style.display = 'flex';
+  document.getElementById('empty').classList.remove('show');
+}
 </script>
 </body>
 </html>
